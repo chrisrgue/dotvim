@@ -1,5 +1,5 @@
-Instalation
-===========
+Installation
+============
 
 
 1.  git clone git://github.com/.../dotvim.git ~/.vim
