@@ -1,0 +1,83 @@
+10
+
+dir
+1052
+http://xptemplate.googlecode.com/svn/trunk/dist
+http://xptemplate.googlecode.com/svn
+
+
+
+2011-02-17T13:38:34.387532Z
+1047
+drdr.xp
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+d81c2de8-289c-11de-8f4a-8f4f67deb9c4
+
+plugin
+dir
+
+ftdetect
+dir
+
+personal
+dir
+
+doc
+dir
+
+VERSION
+file
+
+
+
+
+2012-11-25T08:21:09.843276Z
+592fc0d84c41f24238be5d8e94248c6c
+2011-02-12T10:52:41.279597Z
+1045
+drdr.xp
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+6
+
+syntax
+dir
+
+ftplugin
+dir
+
+autoload
+dir
+
