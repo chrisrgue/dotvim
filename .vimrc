@@ -3,6 +3,7 @@
 call pathogen#infect()
 call pathogen#helptags()
 
+
 " toprevent autoession plugin to autoload last store session from
 " $HOME.'/.vim/autosess/' "
 let g:loaded_autosess = 1
@@ -665,6 +666,14 @@ map ,ca be<CR>r-<CR>?[^-]<CR>1l<CR>r<<CR>,/<CR>
 
 let g:vis_WantSlashSlash=1
 
+"Add RVM info of currently used ruby to vim statusline or titlestring:
+set titlestring=%t%(\ %M%)%(\ (%{expand(\"%:~:.:h\")})%)%(\ %a%)\ %{rvm#statusline()}
+"set statusline=%<%f\ %h%m%r%=%-14.(%l,%c%V%)\ %P\ %{rvm#statusline()}
+"
+"dummy"
+
+"automatically ajusts the current ruby according to a potentitally existing .rvmrc in project's top directory
+":autocmd BufEnter * Rvm
 
 
 "echo "Sourced " . $MYVIMRC
