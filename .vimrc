@@ -1,4 +1,4 @@
-" Enable pathogen: to load all plugins underneath ~/.vim/bundle/<PLUGIN>
+" Enable pathogen: to load all plugin underneath ~/.vim/bundle/<PLUGIN>
 "call pathogen#runtime_append_all_bundles()
 call pathogen#infect()
 call pathogen#helptags()
@@ -80,11 +80,31 @@ filetype plugin on
 "colorscheme luinnar
 "colorscheme chocolateliquor
 "colorscheme anokha
-colorscheme vividchalk
+"colorscheme vividchalk
 "colorscheme leo
 
 "bright colorschemes (at least under GVIM)"
-"colorscheme lazarus
+if !exists("g:auto_pick_colorscheme")
+  "colorscheme ironman
+  colorscheme lazarus
+endif
+
+
+
+"When editing files in two different directories, for example when copying code from one file to another, changing the color scheme helps to quickly identify the directory of the current file:
+"
+"The procedure does not work well for split windows (it might be better to use BufWinEnter instead of BufEnter?).
+"autocmd!  BufWinEnter * if match(@%,'/otherdir/')>=0 | colorscheme oceanblack | else | colorscheme vividchalk | end
+"autocmd!  BufWinEnter * if match(@%,'java')>=0 | colorscheme osx_like | else | colorscheme vividchalk | end
+"autocmd!  BufEnter * if match(@%,'.java$')>=0 | colorscheme osx_like | else | colorscheme vividchalk | end
+"autocmd!  BufWinEnter,bufenter * :PowerlineReloadColorscheme
+autocmd!  bufenter * :PowerlineReloadColorscheme
+"
+"Register @% contains the name of the current file.
+"
+"
+
+
 
 "Make Alt-q behave as Ctrl-q (to enter visual block mode)
 "noremap <A-V> <C-V>
@@ -153,7 +173,8 @@ autocmd BufWritePre     * :call TrimWhiteSpace()
 :autocmd bufenter *.wiki set nofen|nmap <F3> <esc>bi[[<ESC>ea]]<ESC>1h|nmap <S-F3> <ESC>eF[F[2xf]2x1h<ESC>
 ":nmap ,e <esc>bi[[<ESC>ea]]<ESC>2h
 :let g:vimwiki_use_mouse=1
-:autocmd bufenter *.rb set foldmethod=syntax|set foldlevel=1|set nofen|compiler ruby|set ts=2 shiftwidth=2 expandtab
+:autocmd bufenter *.rb set foldmethod=syntax|set foldlevel=1|set nofen|compiler ruby|set ts=2 shiftwidth=2 expandtab|TagbarOpen
+
 "|setfiletype ruby
 "au! filetypedetect BufRead,BufNewFile *.rb   set ts=2 softtabstop=2 shiftwidth=2 expandtab | setfiletype ruby | syn on
 :autocmd filetype ruby runtime! autoload/rubycomplete.vim
@@ -330,7 +351,7 @@ nnoremap <Space>sh :ConqueTermSplit bash<CR>
 au! filetypedetect BufWrite *.dot  call CompileGraphvizDotFileAndShow()
  " Set up detection for Txtfmt files
 au! filetypedetect BufRead,BufNewFile *.txt    setfiletype txtfmt
-au! filetypedetect BufRead,BufNewFile *.java set      softtabstop=4 shiftwidth=4 expandtab | setfiletype java | syn on
+au! filetypedetect BufRead,BufNewFile *.java set      softtabstop=4 shiftwidth=4 expandtab | setfiletype java | syn on|TagbarOpen
 "au! filetypedetect BufRead,BufNewFile *.rb   set ts=2 softtabstop=2 shiftwidth=2 expandtab | setfiletype ruby | syn on
 " Source the vimrc file after saving it
 au! bufwritepost .vimrc source $MYVIMRC
@@ -568,7 +589,7 @@ vmap <C-Up> [egv
 vmap <C-Down> ]egv
 
 " Delete whitespace lines within selection
-vnoremap ,del :g/^\s*$/d<CR>
+noremap ,del :g/^\s*$/d<CR>
 
 
 
@@ -674,6 +695,129 @@ set titlestring=%t%(\ %M%)%(\ (%{expand(\"%:~:.:h\")})%)%(\ %a%)\ %{rvm#statusli
 
 "automatically ajusts the current ruby according to a potentitally existing .rvmrc in project's top directory
 ":autocmd BufEnter * Rvm
+"
+
+
+"See  http://www.vim.org/scripts/script.php?script_id=4018
+" F7 to call clean redundant Java imports and sort them
+function! JavaImpClean()
+    %!~/bin/clean_imports.sh %
+    :JavaImpSort
+endfunction
+:command! JavaImpClean exec JavaImpClean()
+:nnoremap <F7> :JavaImpClean<CR>
+
+
+
+" Tell vim to remember certain things when we exit
+"  '10  :  marks will be remembered for up to 10 previously edited files
+"  "100 :  will save up to 100 lines for each register
+"  :20  :  up to 20 lines of command-line history will be remembered
+"  %    :  saves and restores the buffer list
+"  n... :  where to save the viminfo files
+"
+""   set viminfo='10,\"100,:20,%,n~/.viminfo
+
+":CG:TODO: !! TIPS !!
+"
+" - gv (in normal mode) re-selects the previous visual selection
+
+
+" platuml: uml diagram generation from ascii files"
+let g:plantuml_executable_script='/home/cg/bin/plantuml'
+let s:makecommand=g:plantuml_executable_script." %"
+
+au! filetypedetect BufRead,BufNewFile *.uml let s:makecommand=g:plantuml_executable_script." %" | nnoremap <F5> :w<CR> :silent make<CR> | inoremap <F5> <Esc>:w<CR>:silent make<CR> | vnoremap <F5> :<C-U>:w<CR>:silent make<CR>
+
+function! CompilePlantumlFileAndShow()
+  let l:fname = expand('%:p')
+  "GraphvizCompile
+  echo "Viewing " . l:fname
+  :1,1rubydo gsub!(/(\s+)\b[\/\w]+\.(svg|png)/, '\1' + VIM::evaluate('expand("%:t")').sub('.uml', '.png'))
+  PlantumlShow
+endfunction
+
+
+let g:Plantuml_viewer = "gnome-open"
+
+" Viewing
+fu! PlantumlShow()
+	"if !filereadable(expand('%:p').'.'.g:WMGraphviz_output)
+		"call GraphvizCompile()
+	"endif
+  :make
+  return
+
+  if !exists("g:Plantuml_viewer")
+		echoerr 'Viewer program not set via g:Plantuml_viewer'
+		return
+  endif
+
+	if !executable(g:Plantuml_viewer)
+		echoerr 'Viewer program not found: "'.g:Plantuml_viewer.'"'
+		return
+	endif
+
+	let l:tmpcmd = '!' . g:Plantuml_viewer . ' ' .  shellescape(expand('%:p').'.svg')
+  echo 'tmpcmd:' . l:tmpcmd
+
+	let l:mycmd = substitute(l:tmpcmd, '.uml.svg', '.svg','')
+  echo 'mycmd:' . l:mycmd
+  exec l:mycmd
+	"exec '!'.g:Plantuml_viewer.' '.shellescape(expand('%:p').'.svg').' &'
+endfu
+
+" Available functions
+com! -nargs=0 PlantumlShow : call PlantumlShow()
+
+
+
+
+au! filetypedetect BufWrite *.uml,*.plantuml  call CompilePlantumlFileAndShow()
+
+
+"exmaplary usage of ruby bindings"
+function! RedGem()
+	ruby << EOF
+	class Garnet
+		def initialize(s)
+			@buffer = VIM::Buffer.current
+      #    cmd =<<EOS
+      #    :1,1rubydo gsub!(/(\s+)\b[\/\w]+\.(svg|png)/, '\1' + VIM::evaluate('expand("%:p")').sub('.uml', '.png'))
+EOS   #
+      #    VIM::command("normal #{cmd}")
+      vimputs(s)
+		end
+		def vimputs(s)
+			@buffer.append(@buffer.count,s)
+		end
+	end
+	gem = Garnet.new("pretty")
+EOF
+":1,1rubydo sub!(/\/[^\.]+\.(svg|png)/ , '/foo.\1')  "
+":1,1rubydo sub!(/\/[^\.]+\.(svg|png)/, '/' + VIM::evaluate('expand("%:p")') + '.\1')  "
+":1,1rubydo gsub!(/(\s+)\b[\/\w]+\.(svg|png)/, '\1' + VIM::evaluate('expand("%:p")').sub('.uml', '.png'))"
+endfunction
+
+:command! RedGem call RedGem()
+
+
+
+"In order to use these files, you also need to fix up your .vimrc. For convenience, here’s the part that matters:
+
+set encoding=utf-8
+"set guifont=Consolas\ for\ Powerline\ FixedD:h9
+" To enable powerline statusbar also when there is only 1 window
+set laststatus=2
+let g:Powerline_symbols="fancy"
+
+" The encoding setting is to tell Vim to display the UTF symbols correctly. The patched file contains those fancy arrow-like symbols as part of a UTF-8 encoding, so Vim needs to know about that in order to display that correctly.
+" The FixedD part is just a random name I gave it, as I iterated through the patching. The h9 refers to the font size I want. That means a 9 point font size. Change it to whatever pleases you.
+" The Powerline_symbols setting is to tell Powerline to use the fancy symbols so that you get the nice arrow-like effect. It’s an internal Powerline setting.
+" As a note, it’ll be a good idea to hit :PowerlineClearCache.
+
+nmap ,tb :TagbarToggle<CR>
+nmap <F3> :TagbarToggle<CR>
 
 
 "echo "Sourced " . $MYVIMRC
